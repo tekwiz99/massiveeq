@@ -10,6 +10,8 @@ set -euo pipefail
 PREFIX="${PREFIX:-/usr/local}"
 SRC_DIR="${SRC_DIR:-$HOME/src/massiveeq}"
 UPSTREAM="${UPSTREAM:-https://github.com/massiveadam/massiveeq.git}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PATCH="$SCRIPT_DIR/patches/0001-device-monitor-ignore-non-audio-globals.patch"
 
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 
@@ -27,6 +29,21 @@ if [ ! -d "$SRC_DIR/.git" ]; then
 fi
 cd "$SRC_DIR"
 git pull --ff-only || true
+
+# Upstream v0.3.0-beta.2 re-runs device discovery whenever any PipeWire global
+# appears. The pw-dump process spawned by discovery is itself a new client, so
+# the service loops at ~10 refreshes/second and burns ~25% CPU. This patch
+# ignores non-audio globals. Remove it once the fix is upstream.
+if [ -f "$PATCH" ]; then
+  if grep -q "Only audio-relevant globals" crates/massiveeqd/src/device_monitor.rs; then
+    log "Device-discovery CPU fix already present"
+  elif git apply --check "$PATCH" 2>/dev/null; then
+    log "Applying device-discovery CPU fix"
+    git apply "$PATCH"
+  else
+    log "WARNING: device-discovery CPU fix does not apply; upstream may have changed"
+  fi
+fi
 
 log "Building (release)"
 cargo build --workspace --release --locked

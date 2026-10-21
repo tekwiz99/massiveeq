@@ -1,0 +1,36 @@
+diff --git a/crates/massiveeqd/src/device_monitor.rs b/crates/massiveeqd/src/device_monitor.rs
+index 4f6387f..55c066c 100644
+--- a/crates/massiveeqd/src/device_monitor.rs
++++ b/crates/massiveeqd/src/device_monitor.rs
+@@ -80,6 +80,16 @@ fn run_monitor(
+         let _listener = registry
+             .add_listener_local()
+             .global(move |object| {
++                // Only audio-relevant globals should trigger a rediscovery.
++                // Every PipeWire client (including the `pw-dump` processes
++                // spawned by `discover()`) shows up as a Client global. Waking
++                // the refresh loop for those makes discovery trigger itself.
++                if !matches!(
++                    object.type_,
++                    ObjectType::Node | ObjectType::Metadata | ObjectType::Device
++                ) {
++                    return;
++                }
+                 let _ = global_events.try_send(());
+                 let Some(registry) = registry_weak.upgrade() else {
+                     return;
+@@ -131,8 +141,13 @@ fn run_monitor(
+                 };
+                 // Listener destruction may interact with PipeWire. Do it
+                 // after releasing the RefCell borrow to avoid re-entrancy.
++                let was_tracked = removed.is_some();
+                 drop(removed);
+-                let _ = events.try_send(());
++                // Ignore removals of globals we never track (Clients etc.),
++                // otherwise the short-lived pw-dump client retriggers refresh.
++                if was_tracked {
++                    let _ = events.try_send(());
++                }
+             })
+             .register();
+         let weak = mainloop.downgrade();

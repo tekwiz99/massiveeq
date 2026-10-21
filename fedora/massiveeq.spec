@@ -3,12 +3,13 @@
 
 Name:           massiveeq
 Version:        0.3.0~beta.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Device-aware systemwide equalizer for PipeWire and Wayland desktops
 License:        MIT
 URL:            https://github.com/massiveadam/massiveeq
 Source0:        %{url}/archive/%{commit}/massiveeq-%{commit}.tar.gz
 Source1:        https://raw.githubusercontent.com/massiveadam/massiveeq/%{commit}/LICENSE
+Patch0:         0001-device-monitor-ignore-non-audio-globals.patch
 
 BuildRequires:  cargo
 BuildRequires:  rust
@@ -79,5 +80,9 @@ cp -a packaging/noctalia-v5/massiveeq %{buildroot}%{_datadir}/massiveeq/noctalia
 %{_datadir}/massiveeq/noctalia-v5/massiveeq
 
 %changelog
+* Wed Oct 21 2026 tekwiz99 <5897201+tekwiz99@users.noreply.github.com> - 0.3.0~beta.2-2
+- Fix device-discovery feedback loop that consumed ~25% CPU by spawning
+  pw-dump about ten times per second
+
 * Wed Oct 21 2026 Your Name <you@example.com> - 0.3.0~beta.2-1
 - Initial Fedora packaging of MassiveEQ (upstream commit %{shortcommit})

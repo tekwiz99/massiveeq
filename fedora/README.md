@@ -14,6 +14,7 @@ quick-controls widget.
 |------|---------|
 | `massiveeq-fedora-install.sh` | One-shot build + install from source (no RPM). |
 | `massiveeq.spec` | RPM spec for `rpmbuild` / COPR / mock. |
+| `patches/` | Local fix for upstream's device-discovery CPU loop. |
 | `LICENSE` | MIT license from upstream. |
 
 ## Presets
@@ -49,6 +50,24 @@ The script installs build deps with `dnf`, builds the workspace in release
 mode, installs binaries to `/usr/local/bin`, installs systemd user units,
 the D-Bus service, desktop entry, icon, and the Noctalia v5 widget.
 
+### Device-discovery CPU fix
+
+Upstream `v0.3.0-beta.2` has a feedback loop in `massiveeqd`: every PipeWire
+global (including the `pw-dump` process spawned by device discovery) triggers
+another discovery pass. This spawns `pw-dump` about ten times per second and
+keeps the daemon at roughly 25% CPU even when no audio is playing.
+
+The installer applies `patches/0001-device-monitor-ignore-non-audio-globals.patch`
+automatically and skips it if it is already present or no longer applies.
+You can verify the fix with:
+
+```bash
+pgrep -c pw-dump                  # expect 0 most of the time
+ps -o pcpu= -p "$(pgrep -x massiveeqd)"   # expect well under 1%
+```
+
+Remove the patch once upstream ships an equivalent fix.
+
 Then enable the widget in Noctalia:
 
 ```bash
@@ -71,6 +90,7 @@ type = "massiveeq/massiveeq:quick-controls"
 sudo dnf install -y rpm-build rpmdevtools dnf-plugins-core
 sudo dnf builddep massiveeq.spec
 rpmdev-setuptree
+cp patches/*.patch ~/rpmbuild/SOURCES/
 spectool -g -R massiveeq.spec
 rpmbuild -ba massiveeq.spec
 ```
@@ -79,6 +99,7 @@ Or with `mock`:
 
 ```bash
 sudo dnf install -y mock
+cp patches/*.patch .
 mock -r fedora-44-x86_64 --buildsrpm --spec massiveeq.spec --sources .
 mock -r fedora-44-x86_64 --rebuild massiveeq-*.src.rpm
 ```
