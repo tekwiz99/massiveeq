@@ -1,0 +1,20 @@
+# ThinkPad "thinkpad-unsuck" — MassiveEQ / Equalizer APO profile
+#
+# Derived from the EasyEffects preset by Sebastian Fleer (MIT):
+#   https://github.com/sebastian-de/easyeffects-thinkpad-unsuck
+#
+# EasyEffects uses a 36 dB/oct Butterworth high-pass ("RLC (BT)", slope x3)
+# at 140 Hz. MassiveEQ has no cascaded-slope filter, so it is reproduced as
+# three cascaded 2nd-order Butterworth high-pass sections (Q values for a
+# 6th-order Butterworth). The -6 dB preamp leaves the same headroom the
+# upstream preset gets from its bass-enhancer input gain.
+#
+# Note: MassiveEQ only implements EQ + convolution. The upstream preset's
+# bass enhancer, multiband compressor, stereo tools and limiter are NOT
+# reproduced here — use the bundled EasyEffects JSON for the full chain.
+
+Preamp: -6 dB
+
+Filter: ON HPQ Fc 140 Hz Gain 0 dB Q 0.5176
+Filter: ON HPQ Fc 140 Hz Gain 0 dB Q 0.7071
+Filter: ON HPQ Fc 140 Hz Gain 0 dB Q 1.9319

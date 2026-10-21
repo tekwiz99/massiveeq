@@ -16,6 +16,27 @@ quick-controls widget.
 | `massiveeq.spec` | RPM spec for `rpmbuild` / COPR / mock. |
 | `LICENSE` | MIT license from upstream. |
 
+## Presets
+
+The [`presets/`](../presets/) directory holds ready-to-import profiles:
+
+- [`presets/thinkpad-unsuck/`](../presets/thinkpad-unsuck/) — ThinkPad laptop
+  speaker profile derived from the MIT-licensed EasyEffects
+  `thinkpad-unsuck` preset (high-pass EQ part; the dynamic effects remain
+  EasyEffects-only).
+
+Import a profile with the MassiveEQ GUI (**Profiles → Import**) or:
+
+```bash
+gdbus call --session --dest org.massiveeq.Service1 \
+  --object-path /org/massiveeq/Service1 \
+  --method org.massiveeq.Service1.ImportProfile \
+  "$PWD/presets/thinkpad-unsuck/thinkpad-unsuck.txt"
+```
+
+Then assign it to the output device in the GUI or with
+`massiveeqctl assign <device-key> <profile-id>`.
+
 ## Quick install (from source)
 
 ```bash
